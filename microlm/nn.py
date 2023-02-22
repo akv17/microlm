@@ -1,6 +1,31 @@
 import torch
 
 
+class Embedding(torch.nn.Module):
+
+    def __init__(self, dim, num_tokens, num_positions, dropout=0.1, pad_ix=0):
+        super().__init__()
+        self.dim = dim
+        self.num_tokens = num_tokens
+        self.num_positions = num_positions
+        self.dropout = dropout
+        self.pad_ix = pad_ix
+
+        self.tokens = torch.nn.Embedding(self.num_tokens, self.dim, padding_idx=self.pad_ix)
+        self.positions = torch.nn.Embedding(self.num_positions, self.dim, padding_idx=self.pad_ix)
+        self.drop = torch.nn.Dropout(self.dropout)
+    
+    def forward(self, x):
+        batch_size = x.size(0)
+        seq_len = x.size(1)
+        xt = self.tokens(x)
+        xp = torch.arange(seq_len).unsqueeze(0).tile([batch_size, 1]).long()
+        xp = self.positions(xp)
+        x = xt + xp
+        x = self.drop(x)
+        return x
+
+
 class MultiHeadAttention(torch.nn.Module):
 
     def __init__(self, num_heads, dim, is_causal=False):
@@ -77,23 +102,27 @@ class FFN(torch.nn.Module):
 
 class EncoderBlock(torch.nn.Module):
     
-    def __init__(self, num_heads, dim, ffn_dim, is_causal=False):
+    def __init__(self, num_heads, dim, ffn_dim, dropout=0.1, is_causal=False):
         super().__init__()
         self.num_heads = num_heads
         self.input_dim = dim
         self.ffn_dim = ffn_dim
+        self.dropout = dropout
         self.is_causal = is_causal
 
         self.attn = MultiHeadAttention(num_heads=self.num_heads, dim=self.input_dim, is_causal=self.is_causal)
         self.attn_norm = torch.nn.LayerNorm(self.input_dim)
         self.ffn = FFN(dim=self.input_dim, hidden_dim=self.ffn_dim)
         self.ffn_norm = torch.nn.LayerNorm(self.input_dim)
+        self.drop = torch.nn.Dropout(self.dropout)
 
     def forward(self, x, mask=None):
         x_attn = self.attn(q=x, k=x, v=x, mask=mask)
+        x_attn = self.drop(x_attn)
         x = x + x_attn
         x = self.attn_norm(x)
         x_ffn = self.ffn(x)
+        x_ffn = self.drop(x_ffn)
         x = x + x_ffn
         x = self.ffn_norm(x)
         return x
@@ -101,18 +130,21 @@ class EncoderBlock(torch.nn.Module):
 
 class Encoder(torch.nn.Module):
     
-    def __init__(self, num_blocks, num_heads, dim, ffn_dim, is_causal=False):
+    def __init__(self, num_blocks, num_heads, dim, ffn_dim, dropout=0.1, is_causal=False):
         super().__init__()
         self.num_blocks = num_blocks
         self.num_heads = num_heads
         self.dim = dim
         self.ffn_dim = ffn_dim
         self.is_causal = is_causal
+        self.dropout = dropout
+
         self.blocks = torch.nn.ModuleList([
             EncoderBlock(
                 num_heads=self.num_heads,
                 dim=self.dim,
                 ffn_dim=self.ffn_dim,
+                dropout=self.dropout,
                 is_causal=self.is_causal
             )
             for _ in range(self.num_blocks)
@@ -121,28 +153,6 @@ class Encoder(torch.nn.Module):
     def forward(self, x, mask=None):
         for block in self.blocks:
             x = block(x, mask=mask)
-        return x
-
-
-class Embedding(torch.nn.Module):
-
-    def __init__(self, dim, num_tokens, num_positions, pad_ix=0):
-        super().__init__()
-        self.dim = dim
-        self.num_tokens = num_tokens
-        self.num_positions = num_positions
-        self.pad_ix = pad_ix
-
-        self.tokens = torch.nn.Embedding(self.num_tokens, self.dim, padding_idx=self.pad_ix)
-        self.positions = torch.nn.Embedding(self.num_positions, self.dim, padding_idx=self.pad_ix)
-    
-    def forward(self, x):
-        batch_size = x.size(0)
-        seq_len = x.size(1)
-        xt = self.tokens(x)
-        xp = torch.arange(seq_len).unsqueeze(0).tile([batch_size, 1]).long()
-        xp = self.positions(xp)
-        x = xt + xp
         return x
 
 
