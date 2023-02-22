@@ -21,6 +21,7 @@ class Trainer:
         workers=0,
         log_every=1,
         eval_every=1,
+        lr=0.0001
     ):
         self.logger = logger
         self.dst = dst
@@ -33,6 +34,7 @@ class Trainer:
         self.workers = workers
         self.log_every = log_every
         self.eval_every = eval_every
+        self.lr = lr
         self.state = None
     
     def run(self):
@@ -73,7 +75,7 @@ class Trainer:
         self.model.train()
         self.model.to(self.device)
         self.loss_fn = Loss()
-        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=0.0001)
+        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.lr)
 
     def on_step_end(self):
         step = self.state['step']
