@@ -38,7 +38,6 @@ class Generator:
         seq_len = self.tokenizer.seq_len
         with torch.no_grad():
             while len(buffer) < self.max_size:
-                print(''.join(buffer), end='')
                 prompt = buffer[-seq_len:] 
                 prompt = ''.join(prompt)
                 enc = self.tokenizer.encode_generate(prompt)
@@ -50,10 +49,11 @@ class Generator:
                 logits = logits.cpu()
                 logits = logits / self.temperature
                 probs = torch.softmax(logits, dim=-1)
-                next_ix = torch.multinomial(probs, num_samples=1).item()
+                # next_ix = torch.multinomial(probs, num_samples=1).item()
+                next_ix = probs.argmax().item()
                 pred = self.tokenizer.decode([next_ix])
                 buffer.append(pred)
-                print(pred, end='')
+            print(''.join(buffer))
 
 
 @click.command()

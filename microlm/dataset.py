@@ -25,7 +25,7 @@ class RandomDataset(torch.utils.data.Dataset):
     def __getitem__(self, ix):
         seq_len = self.tokenizer.seq_len_effective
         start = seq_len * ix
-        size = random.randint(1, seq_len)
+        size = random.randint(4, seq_len)
         end = start + size
         text = self.text[start:end]
         enc = self.tokenizer.encode_train(text)
@@ -47,21 +47,18 @@ class RandomDataset(torch.utils.data.Dataset):
         else:
             ix = int(ix)
         enc = self[ix]
-        ids = enc['ids'].cpu().numpy()
-        target = enc['target'].cpu().numpy()
-        mask = enc['mask'].cpu().numpy()
-        print(f'ids:    {ids.shape}')
-        print(f'target: {target.shape}')
-        print(f'mask:   {mask.shape}')
+        ids = enc['ids'].cpu().numpy().tolist()
+        target = enc['target'].cpu().numpy().tolist()
+        mask = enc['mask'].cpu().numpy().tolist()
+        print(f'ids:    {len(ids)}')
+        print(f'mask:   {len(mask)}')
         inp = self.tokenizer.decode(ids)
-        out = self.tokenizer.decode(target)
+        out = self.tokenizer.decode([target])
         print(f'input:  {repr(inp)}')
         print(f'output: {repr(out)}')
         print(f'ids:    {ids}')
         print(f'target: {target}')
         print(f'mask:   {mask}')
-        pad_check = mask.tolist().count(1) == target.tolist().count(-100)
-        print(f'pad_check: {pad_check}')
 
 
 class NoPaddingDataset(torch.utils.data.Dataset):

@@ -31,14 +31,10 @@ class Tokenizer:
     def encode_train(self, text):
         ids = [self.c2i[c] for c in text]
         ids = ids[:self.seq_len_effective]
+        ids, target = ids[:-1], ids[-1]
         mask = [0] * len(ids)
-        target = np.roll(ids, -1).tolist()
-        ids = ids[:self.seq_len]
-        mask = mask[:self.seq_len]
-        target = target[:self.seq_len]
         pad_size = self.seq_len - len(ids)
         ids += [self.pad_ix] * pad_size
-        target += [-100] * pad_size
         mask += [1] * pad_size
         enc = {'ids': ids, 'mask': mask, 'target': target}
         return enc

@@ -13,7 +13,7 @@ class Embedding(torch.nn.Module):
         self.pad_ix = pad_ix
 
         self.tokens = torch.nn.Embedding(self.num_tokens, self.dim, padding_idx=self.pad_ix)
-        self.positions = torch.nn.Embedding(self.num_positions, self.dim, padding_idx=self.pad_ix)
+        self.positions = torch.nn.Embedding(self.num_positions, self.dim)
         self.drop = torch.nn.Dropout(self.dropout)
     
     def forward(self, x):
@@ -173,6 +173,7 @@ class Head(torch.nn.Module):
         self.layer = torch.nn.Linear(self.input_dim, self.num_tokens)
     
     def forward(self, x):
+        x = x.mean(dim=1)
         x = self.layer(x)
         return x
 
