@@ -65,9 +65,11 @@ class MultiHeadAttention(torch.nn.Module):
         x = x / self.norm
         # mask tokens to be ignored.
         if mask is not None:
-            mask = mask.view(batch_size, 1, seq_len, 1)
             mask = mask.bool().to(self.device)
-            x.masked_fill_(mask, float('-inf'))
+            mask_row = mask.view(batch_size, 1, seq_len, 1)
+            mask_col = mask.view(batch_size, 1, 1, seq_len)
+            x.masked_fill_(mask_row, 0.0)
+            x.masked_fill_(mask_col, 0.0)
         # mask look-ahead positions when in causal mode.
         if self.is_causal:
             mask_size = (seq_len, seq_len)
