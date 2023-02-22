@@ -217,3 +217,31 @@ class Transformer(torch.nn.Module):
         x = self.encoder(x, mask=mask)
         x = self.head(x)
         return x
+
+
+class LSTM(torch.nn.Module):
+
+    @classmethod
+    def from_config(cls, config, tokenizer):
+        model = cls(num_tokens=tokenizer.num_chars)
+        return model
+
+    def __init__(self, num_tokens, hidden_size=512):
+        super().__init__()
+        self.num_tokens = num_tokens
+        self.hidden_size = hidden_size
+
+        self.embedding = torch.nn.Embedding(self.num_tokens, self.hidden_size, padding_idx=0)
+        self.lstm = torch.nn.LSTM(
+            input_size=self.hidden_size,
+            hidden_size=self.hidden_size,
+            batch_first=True,
+        )
+        self.head = torch.nn.Linear(self.hidden_size, self.num_tokens)
+    
+    def forward(self, ids, mask=None):
+        x = self.embedding(ids)
+        x, _ = self.lstm(x)
+        x = x.mean(dim=1)
+        x = self.head(x)
+        return x

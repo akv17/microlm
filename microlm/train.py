@@ -2,7 +2,7 @@ import click
 
 from .dataset import RandomDataset
 from .tokenizer import Tokenizer
-from .nn import Transformer
+from .nn import Transformer, LSTM
 from .trainer import Trainer
 from .util import create_logger, load_config
 
@@ -27,7 +27,7 @@ def main(config, explain=None):
     if explain is not None:
         dataset_train.explain(explain)
         exit(0)
-    model = Transformer.from_config(config, tokenizer=tokenizer)  
+    model = LSTM.from_config(config, tokenizer=tokenizer)  
     trainer = Trainer(
         logger=logger,
         dataset_train=dataset_train,
