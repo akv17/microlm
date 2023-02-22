@@ -1,6 +1,6 @@
 import click
 
-from .dataset import Dataset
+from .dataset import RandomDataset
 from .tokenizer import Tokenizer
 from .nn import Transformer
 from .trainer import Trainer
@@ -15,7 +15,7 @@ def main(config, explain=None):
     config = load_config(config)
     tokenizer = Tokenizer(**config['tokenizer'])
     logger.info('Loading dataset...')
-    dataset = Dataset.from_config(config, tokenizer=tokenizer)
+    dataset = RandomDataset.from_config(config, tokenizer=tokenizer)
     logger.info(f'Size: {len(dataset)}')
     val_size = config['dataset']['val_size']
     dataset_train, dataset_val = dataset.split(val_size)
