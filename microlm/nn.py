@@ -3,11 +3,12 @@ import torch
 
 class Embedding(torch.nn.Module):
 
-    def __init__(self, dim, num_tokens, num_positions, dropout=0.1, pad_ix=0):
+    def __init__(self, dim, num_tokens, num_positions, device, dropout=0.1, pad_ix=0):
         super().__init__()
         self.dim = dim
         self.num_tokens = num_tokens
         self.num_positions = num_positions
+        self.device = device
         self.dropout = dropout
         self.pad_ix = pad_ix
 
@@ -19,7 +20,7 @@ class Embedding(torch.nn.Module):
         batch_size = x.size(0)
         seq_len = x.size(1)
         xt = self.tokens(x)
-        xp = torch.arange(seq_len).unsqueeze(0).tile([batch_size, 1]).long()
+        xp = torch.arange(seq_len).unsqueeze(0).tile([batch_size, 1]).long().to(self.device)
         xp = self.positions(xp)
         x = xt + xp
         x = self.drop(x)
@@ -28,12 +29,13 @@ class Embedding(torch.nn.Module):
 
 class MultiHeadAttention(torch.nn.Module):
 
-    def __init__(self, num_heads, dim, is_causal=True):
+    def __init__(self, num_heads, dim, device, is_causal=True):
         super().__init__()
         assert dim % num_heads == 0, "'num_heads' not divisible by 'input_dim'"
         self.num_heads = num_heads
         self.input_dim = dim
         self.is_causal = is_causal
+        self.device = device
         self.hidden_dim = self.input_dim // self.num_heads
 
         q_size = (1, self.num_heads, self.input_dim, self.hidden_dim)
@@ -63,14 +65,15 @@ class MultiHeadAttention(torch.nn.Module):
         x = x / self.norm
         # mask tokens to be ignored.
         if mask is not None:
-            mask = mask.long()
             mask = mask.view(batch_size, 1, seq_len, 1)
+            mask = mask.bool().to(self.device)
             x.masked_fill_(mask, float('-inf'))
         # mask look-ahead positions when in causal mode.
         if self.is_causal:
             mask_size = (seq_len, seq_len)
             # mask out upper diagonal so token 'i' attends only to itself and tokens less than 'i'.
-            mask = torch.triu(torch.ones(mask_size).long(), diagonal=1)
+            mask = torch.triu(torch.ones(mask_size), diagonal=1)
+            mask = mask.bool().to(self.device)
             x.masked_fill_(mask, float('-inf'))
         x = torch.softmax(x, dim=-1)
         x = torch.matmul(x, v)
@@ -101,15 +104,16 @@ class FFN(torch.nn.Module):
 
 class EncoderBlock(torch.nn.Module):
     
-    def __init__(self, num_heads, dim, ffn_dim, dropout=0.1, is_causal=True):
+    def __init__(self, num_heads, dim, ffn_dim, device, dropout=0.1, is_causal=True):
         super().__init__()
         self.num_heads = num_heads
         self.input_dim = dim
         self.ffn_dim = ffn_dim
+        self.device = device
         self.dropout = dropout
         self.is_causal = is_causal
 
-        self.attn = MultiHeadAttention(num_heads=self.num_heads, dim=self.input_dim, is_causal=self.is_causal)
+        self.attn = MultiHeadAttention(num_heads=self.num_heads, dim=self.input_dim, is_causal=self.is_causal, device=self.device)
         self.attn_norm = torch.nn.LayerNorm(self.input_dim)
         self.ffn = FFN(dim=self.input_dim, hidden_dim=self.ffn_dim)
         self.ffn_norm = torch.nn.LayerNorm(self.input_dim)
@@ -129,12 +133,13 @@ class EncoderBlock(torch.nn.Module):
 
 class Encoder(torch.nn.Module):
     
-    def __init__(self, num_blocks, num_heads, dim, ffn_dim, dropout=0.1, is_causal=True):
+    def __init__(self, num_blocks, num_heads, dim, ffn_dim, device, dropout=0.1, is_causal=True):
         super().__init__()
         self.num_blocks = num_blocks
         self.num_heads = num_heads
         self.dim = dim
         self.ffn_dim = ffn_dim
+        self.device = device
         self.is_causal = is_causal
         self.dropout = dropout
 
@@ -144,7 +149,8 @@ class Encoder(torch.nn.Module):
                 dim=self.dim,
                 ffn_dim=self.ffn_dim,
                 dropout=self.dropout,
-                is_causal=self.is_causal
+                is_causal=self.is_causal,
+                device=self.device
             )
             for _ in range(self.num_blocks)
         ])
@@ -173,11 +179,13 @@ class Transformer(torch.nn.Module):
 
     @classmethod
     def from_config(cls, config, tokenizer):
+        device = config['model']['device']
         model = Transformer(
             embedding=Embedding(
                 dim=config['model']['dim'],
                 num_tokens=tokenizer.num_chars,
                 num_positions=tokenizer.seq_len,
+                device=device
             ),
             encoder=Encoder(
                 num_blocks=config['model']['blocks'],
@@ -185,7 +193,8 @@ class Transformer(torch.nn.Module):
                 dim=config['model']['dim'],
                 ffn_dim=config['model']['ffn'],
                 dropout=config['model']['dropout'],
-                is_causal=True
+                is_causal=True,
+                device=device
             ),
             head=Head(
                 dim=config['model']['dim'],

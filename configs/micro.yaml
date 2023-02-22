@@ -11,6 +11,7 @@ model:
   heads: 4
   blocks: 4
   dropout: 0.1
+  device: "cpu"
 
 train:
   dst: "assets/train/1k"
