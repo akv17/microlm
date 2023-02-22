@@ -223,10 +223,11 @@ class LSTM(torch.nn.Module):
 
     @classmethod
     def from_config(cls, config, tokenizer):
+        hs = config['model'].get('hidden_size', 1024)
         model = cls(num_tokens=tokenizer.num_chars)
         return model
 
-    def __init__(self, num_tokens, hidden_size=512):
+    def __init__(self, num_tokens, hidden_size=1024):
         super().__init__()
         self.num_tokens = num_tokens
         self.hidden_size = hidden_size
@@ -236,6 +237,8 @@ class LSTM(torch.nn.Module):
             input_size=self.hidden_size,
             hidden_size=self.hidden_size,
             batch_first=True,
+            num_layers=2,
+            dropout=0.1
         )
         self.head = torch.nn.Linear(self.hidden_size, self.num_tokens)
     

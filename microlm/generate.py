@@ -4,7 +4,7 @@ import click
 import torch
 
 from .tokenizer import Tokenizer
-from .nn import Transformer
+from .nn import Transformer, LSTM
 from .util import create_logger, load_config
 
 
@@ -16,7 +16,7 @@ class Generator:
         device = config['generate']['device']
         tokenizer = os.path.join(dst, 'tokenizer.json')
         tokenizer = Tokenizer.load(tokenizer)
-        model = Transformer.from_config(config, tokenizer=tokenizer)
+        model = LSTM.from_config(config, tokenizer=tokenizer)
         weights = os.path.join(dst, 'model.pt')
         weights = torch.load(weights, map_location=device)
         model.load_state_dict(weights)
@@ -45,12 +45,12 @@ class Generator:
                 ids = torch.as_tensor(ids)
                 ids = ids.unsqueeze(0)
                 out = self.model(ids)
-                logits = out[0, -1]
+                logits = out[0]
                 logits = logits.cpu()
                 logits = logits / self.temperature
                 probs = torch.softmax(logits, dim=-1)
-                # next_ix = torch.multinomial(probs, num_samples=1).item()
-                next_ix = probs.argmax().item()
+                next_ix = torch.multinomial(probs, num_samples=1).item()
+                # next_ix = probs.argmax().item()
                 pred = self.tokenizer.decode([next_ix])
                 buffer.append(pred)
             print(''.join(buffer))

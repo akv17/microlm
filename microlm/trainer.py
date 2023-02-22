@@ -75,7 +75,7 @@ class Trainer:
         self.model.train()
         self.model.to(self.device)
         self.loss_fn = Loss()
-        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.lr)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
 
     def on_step_end(self):
         step = self.state['step']
