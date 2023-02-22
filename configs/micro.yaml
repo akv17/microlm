@@ -1,6 +1,6 @@
 dataset:
-  path: "assets/data/corpus1k.txt"
-  val_size: 100
+  path: "assets/data/corpus100k.txt"
+  val_size: 10000
 
 tokenizer:
   seq_len: 64
@@ -18,5 +18,9 @@ train:
   batch_size: 8
   epochs: 10
   workers: 0
-  log_every: 1
-  eval_every: 10
+  log_every: 10
+  eval_every: 100
+
+generate:
+  device: "cpu"
+  max_size: 72
