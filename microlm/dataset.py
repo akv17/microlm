@@ -6,7 +6,8 @@ import torch
 class Dataset(torch.utils.data.Dataset):
     
     @classmethod
-    def load(cls, path, tokenizer):
+    def from_config(cls, config, tokenizer):
+        path = config['dataset']['path']
         with open(path, 'r', encoding='utf-8') as f:
             text = f.read()
             text = text.replace('\n', '')
@@ -46,8 +47,8 @@ class Dataset(torch.utils.data.Dataset):
             ix = int(ix)
         enc = self[ix]
         ids = enc['ids'].cpu().numpy()
-        target = enc['targets'].cpu().numpy()
-        mask = enc['masks'].cpu().numpy()
+        target = enc['target'].cpu().numpy()
+        mask = enc['mask'].cpu().numpy()
         print(f'ids:    {ids.shape}')
         print(f'target: {target.shape}')
         print(f'mask:   {mask.shape}')
@@ -55,7 +56,7 @@ class Dataset(torch.utils.data.Dataset):
         out = self.tokenizer.decode(target)
         print(f'input:  {repr(inp)}')
         print(f'output: {repr(out)}')
-        print(f'ids:    {ids[:16]} ...')
-        print(f'target: {target[:16]} ...')
-        print(f'mask:   {mask[:16]} ...')
+        print(f'ids:    {ids}')
+        print(f'target: {target}')
+        print(f'mask:   {mask}')
 
