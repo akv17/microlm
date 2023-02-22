@@ -73,7 +73,7 @@ class Trainer:
         self.model.train()
         self.model.to(self.device)
         self.loss_fn = Loss()
-        self.optimizer = torch.optim.AdamW(self.model.parameters())
+        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=0.0001)
 
     def on_step_end(self):
         step = self.state['step']
@@ -127,7 +127,7 @@ class Loss(torch.nn.Module):
 
     def __init__(self):
         super().__init__()
-        self.fn = torch.nn.CrossEntropyLoss()
+        self.fn = torch.nn.CrossEntropyLoss(ignore_index=-100)
     
     def forward(self, outputs, targets):
         outputs = outputs.view(-1, outputs.size(-1))
