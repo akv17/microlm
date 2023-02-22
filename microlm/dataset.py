@@ -27,7 +27,7 @@ class Dataset(torch.utils.data.Dataset):
         start = seq_len * ix
         end = start + seq_len
         text = self.text[start:end]
-        enc = self.tokenizer.encode(text)
+        enc = self.tokenizer.encode_train(text)
         enc = {k: torch.as_tensor(v) for k, v in enc.items()}
         return enc
 

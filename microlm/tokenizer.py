@@ -26,7 +26,7 @@ class Tokenizer:
     def num_chars(self):
         return len(self.c2i)
 
-    def encode(self, text):
+    def encode_train(self, text):
         ids = [self.c2i[c] for c in text]
         ids = ids[:self.seq_len_effective]
         mask = [0] * len(ids)
@@ -35,6 +35,12 @@ class Tokenizer:
         mask = mask[:self.seq_len]
         target = target[:self.seq_len]
         enc = {'ids': ids, 'mask': mask, 'target': target}
+        return enc
+
+    def encode_generate(self, text):
+        ids = [self.c2i[c] for c in text]
+        ids = ids[:self.seq_len]
+        enc = {'ids': ids}
         return enc
 
     def decode(self, ids):
