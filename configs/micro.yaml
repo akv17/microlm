@@ -1,0 +1,22 @@
+dataset:
+  path: "assets/data/corpus1k.txt"
+  val_size: 100
+
+tokenizer:
+  seq_len: 64
+
+model:
+  dim: 512
+  ffn: 1024
+  heads: 4
+  blocks: 4
+  dropout: 0.1
+
+train:
+  dst: "assets/train/1k"
+  device: "cpu"
+  batch_size: 8
+  epochs: 10
+  workers: 0
+  log_every: 1
+  eval_every: 10
