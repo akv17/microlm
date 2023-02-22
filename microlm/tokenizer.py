@@ -1,7 +1,19 @@
+import json
+
 import numpy as np
 
 
 class Tokenizer:
+
+    @classmethod
+    def load(cls, path):
+        with open(path, 'r') as f:
+            data = json.load(f)
+        ob = cls(seq_len=data['seq_len'])
+        ob.c2i = data['c2i']
+        ob.i2c = data['i2c']
+        ob.i2c = {int(k): v for k, v in ob.i2c.items()}
+        return ob
 
     def __init__(self, seq_len):
         self.seq_len = seq_len
@@ -36,3 +48,8 @@ class Tokenizer:
         i2c = {v: k for k, v in c2i.items()}
         self.c2i = c2i
         self.i2c = i2c
+
+    def save(self, path):
+        data = {'seq_len': self.seq_len, 'c2i': self.c2i, 'i2c': self.i2c}
+        with open(path, 'w') as f:
+            json.dump(data, f)

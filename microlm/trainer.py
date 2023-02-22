@@ -109,6 +109,8 @@ class Trainer:
         score = self.state['score']
         if best_score is None or score <= best_score:
             self.state['best_score'] = score
+            tok_fp = os.path.join(self.dst, 'tokenizer.json')
+            self.dataset_train.tokenizer.save(tok_fp)
             model_fp = os.path.join(self.dst, 'model.pt')            
             torch.save(self.model.state_dict(), model_fp)
             state = self.state.copy()
