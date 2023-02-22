@@ -64,8 +64,7 @@ class MultiHeadAttention(torch.nn.Module):
         # mask tokens to be ignored.
         if mask is not None:
             mask = mask.long()
-            # reshape to mask out rows corresponding to masked tokens.
-            mask = mask.view(-1, 1)
+            mask = mask.view(batch_size, 1, seq_len, 1)
             x.masked_fill_(mask, float('-inf'))
         # mask look-ahead positions when in causal mode.
         if self.is_causal:
@@ -172,14 +171,36 @@ class Head(torch.nn.Module):
 
 class Transformer(torch.nn.Module):
 
+    @classmethod
+    def from_config(cls, config, tokenizer):
+        model = Transformer(
+            embedding=Embedding(
+                dim=config['model']['dim'],
+                num_tokens=tokenizer.num_chars,
+                num_positions=tokenizer.seq_len,
+            ),
+            encoder=Encoder(
+                num_blocks=config['model']['blocks'],
+                num_heads=config['model']['heads'],
+                dim=config['model']['dim'],
+                ffn_dim=config['model']['ffn'],
+                dropout=config['model']['dropout']
+            ),
+            head=Head(
+                dim=config['model']['dim'],
+                num_tokens=tokenizer.num_chars
+            ),
+        )
+        return model
+
     def __init__(self, embedding, encoder, head):
         super().__init__()
         self.embedding = embedding
         self.encoder = encoder
         self.head = head
     
-    def forward(self, x):
-        x = self.embedding(x)
-        x = self.encoder(x)
+    def forward(self, ids, mask=None):
+        x = self.embedding(ids)
+        x = self.encoder(x, mask=mask)
         x = self.head(x)
         return x
