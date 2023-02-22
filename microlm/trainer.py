@@ -21,7 +21,7 @@ class Trainer:
         workers=0,
         log_every=1,
         eval_every=1,
-        lr=0.0001
+        lr=0.001
     ):
         self.logger = logger
         self.dst = dst

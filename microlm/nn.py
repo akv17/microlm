@@ -237,14 +237,13 @@ class LSTM(torch.nn.Module):
             input_size=self.hidden_size,
             hidden_size=self.hidden_size,
             batch_first=True,
-            num_layers=2,
-            dropout=0.1
         )
         self.head = torch.nn.Linear(self.hidden_size, self.num_tokens)
     
     def forward(self, ids, mask=None):
         x = self.embedding(ids)
         x, _ = self.lstm(x)
-        x = x.mean(dim=1)
+        mask = (~mask.bool()).sum(dim=-1) - 1
+        x = x[torch.arange(x.size(0)).to(x.device), mask]
         x = self.head(x)
         return x
