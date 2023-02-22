@@ -28,7 +28,7 @@ class Embedding(torch.nn.Module):
 
 class MultiHeadAttention(torch.nn.Module):
 
-    def __init__(self, num_heads, dim, is_causal=False):
+    def __init__(self, num_heads, dim, is_causal=True):
         super().__init__()
         assert dim % num_heads == 0, "'num_heads' not divisible by 'input_dim'"
         self.num_heads = num_heads
@@ -101,7 +101,7 @@ class FFN(torch.nn.Module):
 
 class EncoderBlock(torch.nn.Module):
     
-    def __init__(self, num_heads, dim, ffn_dim, dropout=0.1, is_causal=False):
+    def __init__(self, num_heads, dim, ffn_dim, dropout=0.1, is_causal=True):
         super().__init__()
         self.num_heads = num_heads
         self.input_dim = dim
@@ -129,7 +129,7 @@ class EncoderBlock(torch.nn.Module):
 
 class Encoder(torch.nn.Module):
     
-    def __init__(self, num_blocks, num_heads, dim, ffn_dim, dropout=0.1, is_causal=False):
+    def __init__(self, num_blocks, num_heads, dim, ffn_dim, dropout=0.1, is_causal=True):
         super().__init__()
         self.num_blocks = num_blocks
         self.num_heads = num_heads
@@ -184,7 +184,8 @@ class Transformer(torch.nn.Module):
                 num_heads=config['model']['heads'],
                 dim=config['model']['dim'],
                 ffn_dim=config['model']['ffn'],
-                dropout=config['model']['dropout']
+                dropout=config['model']['dropout'],
+                is_causal=True
             ),
             head=Head(
                 dim=config['model']['dim'],
