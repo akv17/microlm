@@ -8,20 +8,20 @@ tokenizer:
 model:
   dim: 512
   ffn: 1024
-  heads: 4
-  blocks: 4
+  heads: 8
+  blocks: 6
   dropout: 0.1
   device: "cpu"
 
 train:
-  dst: "assets/train/1k"
+  dst: "assets/train/1m"
   device: "cpu"
   batch_size: 8
   epochs: 10
   workers: 0
-  log_every: 10
+  log_every: 1
   eval_every: 100
 
 generate:
   device: "cpu"
-  max_size: 72
+  max_size: 128

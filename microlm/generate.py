@@ -44,7 +44,9 @@ class Generator:
                 ids = enc['ids']
                 ids = torch.as_tensor(ids)
                 ids = ids.unsqueeze(0)
-                out = self.model(ids)
+                mask = [0] * len(ids)
+                mask = torch.as_tensor(mask)
+                out = self.model(ids, mask=mask)
                 logits = out[0]
                 logits = logits.cpu()
                 logits = logits / self.temperature

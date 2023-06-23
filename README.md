@@ -1,2 +1,2 @@
 # microlm
-miniature language modeling framework
+miniature causal language modeling framework
